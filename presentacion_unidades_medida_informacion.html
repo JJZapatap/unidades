@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundamentos de Hardware y Redes | Unidades de Medida de la Información</title>
+  <style>
+    :root{
+      --bg1:#081220;
+      --bg2:#0f1f35;
+      --card:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.12);
+      --text:#eef6ff;
+      --muted:#bad1e8;
+      --blue:#00b9ff;
+      --green:#7CFC86;
+      --orange:#ff9a3d;
+      --cyan:#52f5ff;
+      --danger:#ff6b6b;
+      --good:#87ff87;
+      --shadow:0 14px 40px rgba(0,0,0,.35);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Segoe UI", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 10% 20%, rgba(0,185,255,.18), transparent 18%),
+        radial-gradient(circle at 90% 20%, rgba(124,252,134,.14), transparent 18%),
+        radial-gradient(circle at 70% 80%, rgba(255,154,61,.12), transparent 15%),
+        linear-gradient(135deg,var(--bg1),var(--bg2));
+      overflow:hidden;
+    }
+    .bg-grid{
+      position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events:none;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,.5));
+    }
+    header{
+      position:fixed; top:0; left:0; right:0; z-index:20;
+      backdrop-filter: blur(16px);
+      background: rgba(6, 18, 35, .65);
+      border-bottom:1px solid var(--line);
+      padding:10px 18px;
+      display:flex; align-items:center; gap:14px; justify-content:space-between;
+    }
+    .brand{
+      display:flex; align-items:center; gap:14px;
+    }
+    .brand-badge{
+      width:44px; height:44px; border-radius:14px;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      color:#041018; font-weight:900; display:grid; place-items:center;
+      box-shadow:0 10px 25px rgba(0,185,255,.25);
+    }
+    .brand h1{
+      margin:0; font-size:16px; line-height:1.15; font-weight:800;
+    }
+    .brand p{
+      margin:2px 0 0; color:var(--muted); font-size:12px;
+    }
+    .top-actions{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .mini-btn{
+      padding:9px 14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--text); border-radius:999px; cursor:pointer;
+      font-weight:700; font-size:12px;
+    }
+    .mini-btn:hover{background:rgba(255,255,255,.1)}
+    .progress-wrap{
+      width:min(320px,45vw);
+      height:10px; border-radius:999px; background:rgba(255,255,255,.08);
+      overflow:hidden; border:1px solid var(--line);
+    }
+    .progress-bar{
+      height:100%; width:0%;
+      background:linear-gradient(90deg, var(--blue), var(--green), var(--orange));
+      transition:width .35s ease;
+    }
+    main{
+      height:100%;
+      padding-top:78px;
+    }
+    .slides{
+      height:100%;
+      position:relative;
+    }
+    .slide{
+      position:absolute; inset:0;
+      display:none;
+      padding:34px 42px 90px;
+      overflow:auto;
+    }
+    .slide.active{display:block; animation:fade .35s ease}
+    @keyframes fade{
+      from{opacity:.2; transform:translateY(12px)}
+      to{opacity:1; transform:none}
+    }
+    .hero{
+      display:grid; grid-template-columns:1.15fr .85fr; gap:28px; align-items:center;
+      min-height:calc(100vh - 200px);
+    }
+    .hero-title{
+      font-size: clamp(30px, 5vw, 56px);
+      line-height:1.02; margin:0 0 14px; font-weight:900;
+    }
+    .gradient-text{
+      background:linear-gradient(90deg, var(--blue), var(--cyan), var(--green), var(--orange));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .lead{
+      color:var(--muted); font-size:18px; line-height:1.65; max-width:860px;
+    }
+    .chip-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px}
+    .chip{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.07);
+      color:var(--text); padding:10px 14px; border-radius:999px; font-size:13px; font-weight:700;
+    }
+    .card, .panel, .question, .unit-card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+    .card{padding:24px}
+    .panel{padding:22px}
+    .illus{
+      min-height:420px; display:grid; place-items:center; padding:18px;
+      position:relative; overflow:hidden;
+    }
+    .illus::before{
+      content:""; position:absolute; inset:8%;
+      border-radius:30px;
+      border:1px solid rgba(82,245,255,.15);
+      box-shadow: inset 0 0 40px rgba(0,185,255,.08);
+    }
+    .orbit{
+      position:absolute; border:1px dashed rgba(255,255,255,.12); border-radius:50%;
+      inset:14%; animation:spin 28s linear infinite;
+    }
+    .orbit.two{inset:24%; animation-duration:20s}
+    .orbit.three{inset:34%; animation-duration:14s}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .center-stack{
+      position:relative; z-index:2;
+      display:grid; gap:14px; width:min(420px,90%);
+    }
+    .stack-box{
+      padding:18px 20px;
+      border-radius:18px;
+      background:linear-gradient(135deg, rgba(0,185,255,.16), rgba(124,252,134,.08));
+      border:1px solid rgba(255,255,255,.12);
+      display:flex; justify-content:space-between; align-items:center;
+      font-weight:800;
+    }
+    .stack-box span{color:var(--muted); font-weight:600}
+    .stack-box.big{padding:22px 24px; font-size:20px}
+    .section-title{
+      margin:0 0 12px; font-size:clamp(26px,4vw,40px); line-height:1.05;
+    }
+    .section-sub{
+      margin:0 0 24px; color:var(--muted); line-height:1.6;
+    }
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+    .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+    .grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+    .icon{
+      width:52px; height:52px; border-radius:16px; display:grid; place-items:center;
+      background:linear-gradient(135deg, rgba(0,185,255,.22), rgba(124,252,134,.18));
+      font-size:24px; margin-bottom:12px;
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .unit-card{padding:18px}
+    .unit-card h3{margin:0 0 8px}
+    .unit-card p{margin:0; color:var(--muted); line-height:1.55}
+    .table-wrap{overflow:auto}
+    table{
+      width:100%; border-collapse:collapse; overflow:hidden;
+      border-radius:18px; border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+    }
+    th,td{
+      padding:14px 12px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align:top;
+    }
+    th{
+      background:rgba(0,185,255,.15); font-size:14px;
+    }
+    tr:last-child td{border-bottom:none}
+    .formula{
+      padding:14px 16px; border-left:4px solid var(--orange);
+      background:rgba(255,154,61,.08); border-radius:14px; margin:12px 0;
+      font-weight:700;
+    }
+    .example{
+      padding:18px; border-radius:18px;
+      background:rgba(255,255,255,.05); border:1px solid var(--line);
+      margin-bottom:14px;
+    }
+    .example h4{margin:0 0 8px}
+    .steps{margin:10px 0 0 18px; color:var(--muted); line-height:1.7}
+    .exercise-head{
+      display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .badge{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      background:rgba(124,252,134,.14); border:1px solid rgba(124,252,134,.24);
+      color:#dfffe0; font-weight:700;
+    }
+    .question{
+      padding:18px; margin-bottom:14px;
+    }
+    .question h4{margin:0 0 12px}
+    .options{display:grid; gap:10px}
+    .option{
+      padding:12px 14px; border-radius:14px; cursor:pointer;
+      border:1px solid var(--line); background:rgba(255,255,255,.04);
+      transition: .2s ease;
+      font-weight:600;
+    }
+    .option:hover{background:rgba(255,255,255,.08); transform:translateY(-1px)}
+    .option.selected{outline:2px solid rgba(0,185,255,.55)}
+    .option.correct{background:rgba(124,252,134,.16); border-color:rgba(124,252,134,.35)}
+    .option.incorrect{background:rgba(255,107,107,.16); border-color:rgba(255,107,107,.35)}
+    .feedback{
+      margin-top:10px; font-size:14px; color:var(--muted); line-height:1.55;
+    }
+    .controls{
+      display:flex; gap:12px; flex-wrap:wrap; margin-top:18px;
+    }
+    .btn{
+      padding:12px 18px; border:none; cursor:pointer; border-radius:14px;
+      font-weight:800; color:#041018;
+      background:linear-gradient(135deg,var(--blue), var(--green));
+      box-shadow:0 10px 24px rgba(0,185,255,.18);
+    }
+    .btn.secondary{
+      color:var(--text);
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--line);
+      box-shadow:none;
+    }
+    .score-box{
+      font-size:17px; font-weight:800;
+      padding:18px; border-radius:18px; margin-top:16px;
+      background:linear-gradient(135deg, rgba(0,185,255,.14), rgba(124,252,134,.12));
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .reveal{
+      margin-top:10px; display:none;
+      padding:14px 16px; border-radius:14px;
+      background:rgba(124,252,134,.08); border:1px dashed rgba(124,252,134,.3);
+      color:#effff0; line-height:1.7;
+    }
+    .open-answer{
+      width:100%; padding:12px 14px; border-radius:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line); color:var(--text); margin-top:10px;
+      font-size:15px;
+    }
+    .mini-note{
+      font-size:13px; color:var(--muted); line-height:1.55;
+    }
+    .footer-nav{
+      position:fixed; left:0; right:0; bottom:0; z-index:22;
+      backdrop-filter: blur(16px);
+      background: rgba(6,18,35,.68);
+      border-top:1px solid var(--line);
+      padding:10px 20px;
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+    }
+    .nav-btn{
+      width:56px; height:56px; border-radius:18px; border:1px solid var(--line);
+      background:rgba(255,255,255,.08); color:var(--text); cursor:pointer; font-size:22px; font-weight:900;
+    }
+    .nav-btn:hover{background:rgba(255,255,255,.14)}
+    .slide-indicator{
+      font-weight:700; color:var(--muted);
+    }
+    .toc{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+    }
+    .dot{
+      padding:9px 12px; border-radius:999px; border:1px solid var(--line);
+      background:rgba(255,255,255,.06); color:var(--muted); cursor:pointer;
+      font-size:12px; font-weight:700;
+    }
+    .dot.active{background:rgba(0,185,255,.18); color:#fff}
+    .kpi{
+      display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:16px;
+    }
+    .kpi .panel h3{margin:0; font-size:26px}
+    .kpi .panel p{margin:8px 0 0; color:var(--muted)}
+    .callout{
+      border-left:4px solid var(--blue);
+      padding:12px 16px;
+      background:rgba(0,185,255,.08);
+      border-radius:14px; color:#e9f9ff;
+      line-height:1.65;
+      margin:14px 0;
+    }
+    .two-columns{
+      columns:2; column-gap:18px;
+    }
+    .two-columns li{break-inside:avoid; margin-bottom:10px; color:var(--muted)}
+    .pill{
+      display:inline-block; padding:6px 10px; border-radius:999px; margin-right:6px; margin-bottom:8px;
+      background:rgba(255,255,255,.08); border:1px solid var(--line); font-size:12px;
+    }
+    @media (max-width: 980px){
+      .hero, .grid-2, .grid-3, .grid-4, .kpi{grid-template-columns:1fr}
+      .slide{padding:24px 18px 100px}
+      .progress-wrap{width:160px}
+      .two-columns{columns:1}
+      header{padding:10px 12px}
+      .brand h1{font-size:14px}
+    }
+  </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<header>
+  <div class="brand">
+    <div class="brand-badge">FH</div>
+    <div>
+      <h1>Fundamentos de Hardware y Redes</h1>
+      <p>Presentación interactiva · Licenciatura en Tecnologías · Unidades de medida de la información</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <div class="progress-wrap" aria-label="Progreso de la presentación">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <button class="mini-btn" onclick="toggleCheatSheet()">Atajo de equivalencias</button>
+    <button class="mini-btn" onclick="goToSlide(0)">Ir a inicio</button>
+  </div>
+</header>
+
+<main>
+  <div class="slides">
+
+    <!-- Slide 1 -->
+    <section class="slide active">
+      <div class="hero">
+        <div>
+          <div class="chip-row">
+            <span class="chip">Curso: Fundamentos de Hardware y Redes</span>
+            <span class="chip">Tema central: Medidas de información</span>
+            <span class="chip">Modalidad: Presentación interactiva</span>
+          </div>
+          <h2 class="hero-title">Unidades de <span class="gradient-text">Medida de la Información</span> y sus Equivalencias</h2>
+          <p class="lead">
+            Aprende qué son el <strong>bit</strong>, el <strong>byte</strong>, el <strong>Kilobyte</strong>, el <strong>Megabyte</strong>, el <strong>Gigabyte</strong>, el <strong>Terabyte</strong> y otras unidades,
+            cómo se convierten y por qué son esenciales para comprender archivos, software, memoria, discos, USB, nube y redes.
+          </p>
+          <div class="card">
+            <h3 style="margin-top:0">¿Qué lograrán hoy los estudiantes?</h3>
+            <div class="two-columns">
+              <ul>
+                <li>Reconocer las unidades básicas y avanzadas de almacenamiento de información.</li>
+                <li>Entender equivalencias y conversiones entre unidades.</li>
+                <li>Interpretar el tamaño de archivos, memorias y discos.</li>
+                <li>Analizar si un dispositivo tiene capacidad suficiente para instalar software o guardar archivos.</li>
+                <li>Resolver ejercicios y problemas aplicados al contexto académico y tecnológico.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="card illus" aria-hidden="true">
+          <div class="orbit"></div>
+          <div class="orbit two"></div>
+          <div class="orbit three"></div>
+          <div class="center-stack">
+            <div class="stack-box big">1 byte <span>= 8 bits</span></div>
+            <div class="stack-box">1 KB <span>= 1024 bytes</span></div>
+            <div class="stack-box">1 MB <span>= 1024 KB</span></div>
+            <div class="stack-box">1 GB <span>= 1024 MB</span></div>
+            <div class="stack-box">1 TB <span>= 1024 GB</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 2 -->
+    <section class="slide">
+      <h2 class="section-title">Introducción, evolución e importancia</h2>
+      <p class="section-sub">
+        Desde los primeros computadores hasta los sistemas modernos con inteligencia artificial, almacenamiento en la nube y dispositivos móviles,
+        medir información se volvió fundamental para organizar, transmitir, instalar, respaldar y procesar datos.
+      </p>
+
+      <div class="grid-3">
+        <div class="unit-card">
+          <div class="icon">🧠</div>
+          <h3>¿Por qué importa?</h3>
+          <p>
+            En Licenciatura en Tecnologías, conocer estas unidades permite tomar decisiones correctas al trabajar con software educativo,
+            archivos multimedia, plataformas virtuales, aplicaciones y dispositivos de almacenamiento.
+          </p>
+        </div>
+        <div class="unit-card">
+          <div class="icon">💾</div>
+          <h3>Usos reales</h3>
+          <p>
+            Saber cuánto ocupa una app, cuánto espacio queda en un disco, cuánta memoria RAM requiere un programa
+            o cuánto puede almacenar una memoria USB.
+          </p>
+        </div>
+        <div class="unit-card">
+          <div class="icon">🌐</div>
+          <h3>En redes y educación</h3>
+          <p>
+            También ayuda a interpretar tamaños de descargas, velocidades de transferencia, recursos digitales,
+            videos educativos y respaldos de trabajos académicos.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Idea clave:</strong> una unidad de información indica la cantidad de datos que un archivo, memoria o dispositivo puede almacenar o transmitir.
+        Mientras más grande la unidad, más información representa.
+      </div>
+
+      <div class="kpi">
+        <div class="panel">
+          <h3>bit</h3>
+          <p>Unidad mínima de información: 0 o 1.</p>
+        </div>
+        <div class="panel">
+          <h3>byte</h3>
+          <p>Grupo de 8 bits. Base para textos, archivos y almacenamiento.</p>
+        </div>
+        <div class="panel">
+          <h3>GB</h3>
+          <p>Muy usado para discos, software, celulares y memorias USB.</p>
+        </div>
+        <div class="panel">
+          <h3>TB</h3>
+          <p>Frecuente en discos duros, SSD y almacenamiento de gran volumen.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 3 -->
+    <section class="slide">
+      <h2 class="section-title">Definición de las unidades de medida de la información</h2>
+      <p class="section-sub">
+        En esta presentación trabajaremos principalmente con la base binaria clásica: <strong>1 KB = 1024 bytes</strong>, salvo que se indique lo contrario.
+        Además, conocerás la diferencia entre prefijos comerciales y prefijos binarios.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Unidad</th>
+              <th>Símbolo</th>
+              <th>Equivalencia</th>
+              <th>¿Dónde se usa?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>bit</td>
+              <td>b</td>
+              <td>Unidad mínima de información (0 o 1)</td>
+              <td>Procesamiento digital, redes, codificación binaria.</td>
+            </tr>
+            <tr>
+              <td>Byte</td>
+              <td>B</td>
+              <td>8 bits</td>
+              <td>Caracteres, tamaño básico de archivos y memoria.</td>
+            </tr>
+            <tr>
+              <td>Kilobyte</td>
+              <td>KB</td>
+              <td>1024 B</td>
+              <td>Documentos pequeños, imágenes simples, textos.</td>
+            </tr>
+            <tr>
+              <td>Megabyte</td>
+              <td>MB</td>
+              <td>1024 KB</td>
+              <td>Archivos, aplicaciones livianas, fotos, música.</td>
+            </tr>
+            <tr>
+              <td>Gigabyte</td>
+              <td>GB</td>
+              <td>1024 MB</td>
+              <td>Programas, videojuegos, memorias USB, discos, celulares.</td>
+            </tr>
+            <tr>
+              <td>Terabyte</td>
+              <td>TB</td>
+              <td>1024 GB</td>
+              <td>Discos duros y SSD de alta capacidad, copias de seguridad.</td>
+            </tr>
+            <tr>
+              <td>Petabyte</td>
+              <td>PB</td>
+              <td>1024 TB</td>
+              <td>Centros de datos, servicios en la nube, big data.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-2" style="margin-top:18px">
+        <div class="panel">
+          <h3 style="margin-top:0">Prefijos binarios</h3>
+          <p class="mini-note">
+            También existen los prefijos <strong>KiB, MiB, GiB, TiB</strong>, usados para expresar de forma exacta la base 1024:
+            1 KiB = 1024 B, 1 MiB = 1024 KiB, etc.
+          </p>
+          <div class="formula">En clase usaremos equivalencias binarias clásicas para facilitar los ejercicios.</div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-top:0">Cuidado con las letras</h3>
+          <p class="mini-note">
+            <strong>b</strong> minúscula significa <em>bit</em> y <strong>B</strong> mayúscula significa <em>Byte</em>.
+            No es lo mismo 8 Mb que 8 MB. El segundo es ocho veces más grande.
+          </p>
+          <div class="pill">1 Byte = 8 bits</div>
+          <div class="pill">1024 KB = 1 MB</div>
+          <div class="pill">1024 MB = 1 GB</div>
+          <div class="pill">1024 GB = 1 TB</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 4 -->
+    <section class="slide">
+      <h2 class="section-title">Cómo convertir entre unidades</h2>
+      <p class="section-sub">
+        La regla general es muy sencilla: <strong>al pasar a una unidad mayor, se divide entre 1024</strong>;
+        <strong>al pasar a una unidad menor, se multiplica por 1024</strong>.
+      </p>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h3 style="margin-top:0">Reglas prácticas</h3>
+          <div class="formula">De bytes a KB: dividir entre 1024</div>
+          <div class="formula">De KB a MB: dividir entre 1024</div>
+          <div class="formula">De MB a GB: dividir entre 1024</div>
+          <div class="formula">De GB a MB: multiplicar por 1024</div>
+          <div class="formula">De MB a KB: multiplicar por 1024</div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-top:0">Recordatorio visual</h3>
+          <p class="mini-note">
+            bit → Byte → KB → MB → GB → TB → PB
+          </p>
+          <p class="mini-note">
+            Si avanzas hacia la derecha, la unidad es mayor. Si retrocedes hacia la izquierda, la unidad es menor.
+          </p>
+          <div class="callout">
+            <strong>Ejemplo rápido:</strong> 2 MB a KB = 2 × 1024 = <strong>2048 KB</strong>.
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <div class="example">
+          <h4>Ejemplo 1: Convertir 4096 bytes a KB</h4>
+          <ol class="steps">
+            <li>Sabemos que 1 KB = 1024 bytes.</li>
+            <li>Entonces: 4096 ÷ 1024 = 4</li>
+            <li><strong>Resultado: 4096 bytes = 4 KB</strong></li>
+          </ol>
+        </div>
+        <div class="example">
+          <h4>Ejemplo 2: Convertir 1.5 GB a MB</h4>
+          <ol class="steps">
+            <li>Sabemos que 1 GB = 1024 MB.</li>
+            <li>Entonces: 1.5 × 1024 = 1536</li>
+            <li><strong>Resultado: 1.5 GB = 1536 MB</strong></li>
+          </ol>
+        </div>
+        <div class="example">
+          <h4>Ejemplo 3: Convertir 3000 KB a MB</h4>
+          <ol class="steps">
+            <li>Sabemos que 1 MB = 1024 KB.</li>
+            <li>Entonces: 3000 ÷ 1024 ≈ 2.93</li>
+            <li><strong>Resultado: 3000 KB ≈ 2.93 MB</strong></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 5 -->
+    <section class="slide">
+      <div class="exercise-head">
+        <div>
+          <h2 class="section-title" style="margin-bottom:8px">Test 1 · Conversiones básicas</h2>
+          <p class="section-sub" style="margin-bottom:0">Selecciona la respuesta correcta. Luego haz clic en <strong>Revisar</strong>.</p>
+        </div>
+        <span class="badge">5 ejercicios</span>
+      </div>
+
+      <div id="quiz1">
+        <div class="question" data-answer="1">
+          <h4>1. ¿Cuántos bytes hay en 1 KB?</h4>
+          <div class="options">
+            <div class="option">100 bytes</div>
+            <div class="option">1024 bytes</div>
+            <div class="option">2048 bytes</div>
+            <div class="option">8 bytes</div>
+          </div>
+          <div class="feedback">Pista: recuerda la base binaria que estamos usando.</div>
+        </div>
+
+        <div class="question" data-answer="2">
+          <h4>2. ¿Cuánto es 2 MB en KB?</h4>
+          <div class="options">
+            <div class="option">512 KB</div>
+            <div class="option">1024 KB</div>
+            <div class="option">2048 KB</div>
+            <div class="option">4096 KB</div>
+          </div>
+          <div class="feedback">Pista: 1 MB = 1024 KB.</div>
+        </div>
+
+        <div class="question" data-answer="0">
+          <h4>3. ¿A cuántos KB equivalen 4096 bytes?</h4>
+          <div class="options">
+            <div class="option">4 KB</div>
+            <div class="option">8 KB</div>
+            <div class="option">2 KB</div>
+            <div class="option">16 KB</div>
+          </div>
+          <div class="feedback">Pista: divide entre 1024.</div>
+        </div>
+
+        <div class="question" data-answer="3">
+          <h4>4. ¿Cuánto es 0.5 GB en MB?</h4>
+          <div class="options">
+            <div class="option">100 MB</div>
+            <div class="option">256 MB</div>
+            <div class="option">500 MB</div>
+            <div class="option">512 MB</div>
+          </div>
+          <div class="feedback">Pista: multiplica por 1024.</div>
+        </div>
+
+        <div class="question" data-answer="1">
+          <h4>5. ¿Cuál es mayor?</h4>
+          <div class="options">
+            <div class="option">800 MB</div>
+            <div class="option">1 GB</div>
+            <div class="option">900 MB</div>
+            <div class="option">1023 MB</div>
+          </div>
+          <div class="feedback">Pista: 1 GB = 1024 MB.</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" onclick="gradeQuiz('quiz1', 'quiz1Score')">Revisar respuestas</button>
+        <button class="btn secondary" onclick="resetQuiz('quiz1', 'quiz1Score')">Reiniciar</button>
+      </div>
+      <div id="quiz1Score"></div>
+    </section>
+
+    <!-- Slide 6 -->
+    <section class="slide">
+      <h2 class="section-title">Problemas resueltos paso a paso</h2>
+      <p class="section-sub">
+        Ahora veamos situaciones reales, similares a las que un estudiante o docente puede encontrar
+        al instalar software, guardar trabajos o administrar recursos tecnológicos.
+      </p>
+
+      <div class="question">
+        <h4>Problema 1. Instalación de software y copia de archivo</h4>
+        <p>
+          Se tiene un disco con <strong>800 MB libres</strong>. Se desea instalar un software que ocupa
+          <strong>0.5 GB</strong> y copiar un archivo de <strong>1800 bytes</strong>.
+          ¿Se puede instalar y copiar? ¿Qué espacio quedaría disponible?
+        </p>
+        <div class="controls">
+          <button class="btn secondary" onclick="toggleReveal('p1')">Mostrar solución</button>
+        </div>
+        <div class="reveal" id="p1">
+          <strong>Paso 1:</strong> Convertir 0.5 GB a MB → 0.5 × 1024 = <strong>512 MB</strong>.<br>
+          <strong>Paso 2:</strong> Convertir 1800 bytes a MB. Primero: 1800 ÷ 1024 ≈ 1.76 KB. Luego: 1.76 ÷ 1024 ≈ <strong>0.0017 MB</strong>.<br>
+          <strong>Paso 3:</strong> Espacio total requerido = 512 + 0.0017 = <strong>512.0017 MB</strong>.<br>
+          <strong>Paso 4:</strong> Comparar con el espacio disponible: 800 MB > 512.0017 MB, por lo tanto <strong>sí se puede</strong>.<br>
+          <strong>Paso 5:</strong> Espacio restante = 800 − 512.0017 = <strong>287.9983 MB</strong> aproximadamente.
+        </div>
+      </div>
+
+      <div class="question">
+        <h4>Problema 2. Capacidad de una memoria USB</h4>
+        <p>
+          Una memoria USB tiene <strong>16 GB</strong> de capacidad. Se desea guardar tres videos:
+          uno de <strong>2.5 GB</strong>, otro de <strong>3.2 GB</strong> y otro de <strong>700 MB</strong>.
+          ¿Caben? ¿Cuánto espacio sobra?
+        </p>
+        <div class="controls">
+          <button class="btn secondary" onclick="toggleReveal('p2')">Mostrar solución</button>
+        </div>
+        <div class="reveal" id="p2">
+          <strong>Paso 1:</strong> Pasar todo a MB. 16 GB = 16 × 1024 = <strong>16384 MB</strong>.<br>
+          2.5 GB = <strong>2560 MB</strong>, 3.2 GB = 3.2 × 1024 = <strong>3276.8 MB</strong>, y 700 MB se mantiene igual.<br>
+          <strong>Paso 2:</strong> Sumar los tamaños: 2560 + 3276.8 + 700 = <strong>6536.8 MB</strong>.<br>
+          <strong>Paso 3:</strong> Como 16384 MB > 6536.8 MB, <strong>sí caben</strong>.<br>
+          <strong>Paso 4:</strong> Espacio restante = 16384 − 6536.8 = <strong>9847.2 MB</strong>, que equivale a aproximadamente <strong>9.62 GB</strong>.
+        </div>
+      </div>
+
+      <div class="question">
+        <h4>Problema 3. Recursos digitales para una clase</h4>
+        <p>
+          Un docente quiere guardar en su portátil <strong>25 archivos PDF</strong> de <strong>12 MB</strong> cada uno
+          y <strong>10 videos</strong> de <strong>0.8 GB</strong> cada uno. Si el equipo tiene <strong>10 GB libres</strong>,
+          ¿es suficiente el espacio?
+        </p>
+        <div class="controls">
+          <button class="btn secondary" onclick="toggleReveal('p3')">Mostrar solución</button>
+        </div>
+        <div class="reveal" id="p3">
+          <strong>Paso 1:</strong> PDFs: 25 × 12 MB = <strong>300 MB</strong>.<br>
+          <strong>Paso 2:</strong> Videos: 10 × 0.8 GB = 8 GB. Pasando a MB: 8 × 1024 = <strong>8192 MB</strong>.<br>
+          <strong>Paso 3:</strong> Espacio requerido total = 8192 + 300 = <strong>8492 MB</strong>.<br>
+          <strong>Paso 4:</strong> Espacio disponible: 10 GB = 10 × 1024 = <strong>10240 MB</strong>.<br>
+          <strong>Paso 5:</strong> Como 10240 MB > 8492 MB, <strong>sí es suficiente</strong>.<br>
+          <strong>Paso 6:</strong> Espacio restante = 10240 − 8492 = <strong>1748 MB</strong>, aproximadamente <strong>1.71 GB</strong>.
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 7 -->
+    <section class="slide">
+      <div class="exercise-head">
+        <div>
+          <h2 class="section-title" style="margin-bottom:8px">Test final · Resuelve tú mismo</h2>
+          <p class="section-sub" style="margin-bottom:0">
+            Escribe tu resultado en el espacio correspondiente. Al final puedes comparar con la solución.
+          </p>
+        </div>
+        <span class="badge">5 ejercicios</span>
+      </div>
+
+      <div class="question">
+        <h4>1. Convierte 3072 KB a MB.</h4>
+        <input class="open-answer" placeholder="Escribe tu respuesta aquí" />
+        <div class="controls"><button class="btn secondary" onclick="toggleReveal('f1')">Ver solución</button></div>
+        <div class="reveal" id="f1"><strong>Solución:</strong> 3072 ÷ 1024 = <strong>3 MB</strong>.</div>
+      </div>
+
+      <div class="question">
+        <h4>2. Convierte 2.25 GB a MB.</h4>
+        <input class="open-answer" placeholder="Escribe tu respuesta aquí" />
+        <div class="controls"><button class="btn secondary" onclick="toggleReveal('f2')">Ver solución</button></div>
+        <div class="reveal" id="f2"><strong>Solución:</strong> 2.25 × 1024 = <strong>2304 MB</strong>.</div>
+      </div>
+
+      <div class="question">
+        <h4>3. Una memoria tiene 2048 MB libres. ¿Cuántos GB son?</h4>
+        <input class="open-answer" placeholder="Escribe tu respuesta aquí" />
+        <div class="controls"><button class="btn secondary" onclick="toggleReveal('f3')">Ver solución</button></div>
+        <div class="reveal" id="f3"><strong>Solución:</strong> 2048 ÷ 1024 = <strong>2 GB</strong>.</div>
+      </div>
+
+      <div class="question">
+        <h4>4. Un archivo de 1536 KB se quiere guardar en una carpeta con 1 MB libre. ¿Se puede?</h4>
+        <input class="open-answer" placeholder="Escribe tu razonamiento aquí" />
+        <div class="controls"><button class="btn secondary" onclick="toggleReveal('f4')">Ver solución</button></div>
+        <div class="reveal" id="f4">
+          <strong>Solución:</strong> 1536 KB = 1536 ÷ 1024 = <strong>1.5 MB</strong>. Como el espacio disponible es 1 MB,
+          <strong>no se puede guardar</strong>.
+        </div>
+      </div>
+
+      <div class="question">
+        <h4>5. Un disco tiene 5 GB libres. Se instalan dos programas: uno de 700 MB y otro de 1.2 GB. ¿Cuánto espacio queda?</h4>
+        <input class="open-answer" placeholder="Escribe tu respuesta aquí" />
+        <div class="controls"><button class="btn secondary" onclick="toggleReveal('f5')">Ver solución</button></div>
+        <div class="reveal" id="f5">
+          <strong>Solución:</strong> 5 GB = 5120 MB. 1.2 GB = 1228.8 MB. Total usado = 700 + 1228.8 = <strong>1928.8 MB</strong>.<br>
+          Espacio restante = 5120 − 1928.8 = <strong>3191.2 MB</strong>, aproximadamente <strong>3.12 GB</strong>.
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 8 -->
+    <section class="slide">
+      <div class="hero" style="min-height:auto">
+        <div>
+          <h2 class="section-title">Cierre, ideas clave y orientación didáctica</h2>
+          <p class="section-sub">
+            Comprender las medidas de información es un aprendizaje esencial para cualquier estudiante del área tecnológica,
+            pues conecta la teoría con decisiones reales sobre almacenamiento, software, archivos, plataformas digitales y recursos educativos.
+          </p>
+
+          <div class="card">
+            <h3 style="margin-top:0">Ideas clave que deben recordar</h3>
+            <ul class="two-columns">
+              <li>El <strong>bit</strong> es la unidad mínima de información.</li>
+              <li>El <strong>Byte</strong> equivale a <strong>8 bits</strong>.</li>
+              <li>Para convertir a una unidad mayor, se <strong>divide entre 1024</strong>.</li>
+              <li>Para convertir a una unidad menor, se <strong>multiplica por 1024</strong>.</li>
+              <li>Estas conversiones se aplican en discos, memorias, software, celulares, nube y redes.</li>
+              <li>Antes de instalar o copiar archivos, siempre es importante comparar el tamaño requerido con el espacio disponible.</li>
+            </ul>
+          </div>
+
+          <div class="controls">
+            <button class="btn" onclick="goToSlide(0)">Volver al inicio</button>
+            <button class="btn secondary" onclick="goToSlide(4)">Repetir test 1</button>
+            <button class="btn secondary" onclick="goToSlide(6)">Ir al test final</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">Sugerencias pedagógicas para tu clase</h3>
+          <div class="grid-2">
+            <div class="panel">
+              <h4 style="margin-top:0">Actividad rápida</h4>
+              <p class="mini-note">
+                Pide a los estudiantes revisar el tamaño de una foto, un PDF, una app móvil y una memoria USB.
+                Luego que los expresen en diferentes unidades.
+              </p>
+            </div>
+            <div class="panel">
+              <h4 style="margin-top:0">Conexión con hardware</h4>
+              <p class="mini-note">
+                Relaciona estas medidas con RAM, SSD, HDD, pendrive, nube, caché y tamaño de instalación de programas.
+              </p>
+            </div>
+            <div class="panel">
+              <h4 style="margin-top:0">Conexión con software</h4>
+              <p class="mini-note">
+                Muestra requisitos mínimos de instalación y analiza si un equipo tiene recursos suficientes.
+              </p>
+            </div>
+            <div class="panel">
+              <h4 style="margin-top:0">Conexión con redes</h4>
+              <p class="mini-note">
+                Diferencia entre <strong>MB</strong> y <strong>Mb</strong> al hablar de descargas y velocidades de conexión.
+              </p>
+            </div>
+          </div>
+
+          <div class="score-box">
+            ¡Listo! Ya tienes una presentación web interactiva para explicar, practicar y evaluar el tema en clase.
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="footer-nav">
+  <button class="nav-btn" onclick="prevSlide()" aria-label="Retroceder">←</button>
+  <div>
+    <div class="slide-indicator" id="slideIndicator">Diapositiva 1 de 8</div>
+    <div class="toc" id="toc"></div>
+  </div>
+  <button class="nav-btn" onclick="nextSlide()" aria-label="Avanzar">→</button>
+</div>
+
+<div class="card" id="cheatSheet" style="display:none; position:fixed; right:18px; top:88px; z-index:50; width:min(420px, calc(100vw - 36px));">
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+    <h3 style="margin:0">Atajo de equivalencias</h3>
+    <button class="mini-btn" onclick="toggleCheatSheet()">Cerrar</button>
+  </div>
+  <div class="formula">1 Byte = 8 bits</div>
+  <div class="formula">1 KB = 1024 Bytes</div>
+  <div class="formula">1 MB = 1024 KB</div>
+  <div class="formula">1 GB = 1024 MB</div>
+  <div class="formula">1 TB = 1024 GB</div>
+  <p class="mini-note">Consejo: al subir de unidad divide; al bajar de unidad multiplica.</p>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const progressBar = document.getElementById('progressBar');
+  const slideIndicator = document.getElementById('slideIndicator');
+  const toc = document.getElementById('toc');
+  let current = 0;
+
+  function buildToc(){
+    slides.forEach((_, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'dot';
+      btn.textContent = i + 1;
+      btn.onclick = () => goToSlide(i);
+      toc.appendChild(btn);
+    });
+  }
+
+  function updateUI(){
+    slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    const pct = ((current + 1) / slides.length) * 100;
+    progressBar.style.width = pct + '%';
+    slideIndicator.textContent = `Diapositiva ${current + 1} de ${slides.length}`;
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  function goToSlide(index){
+    current = Math.max(0, Math.min(slides.length - 1, index));
+    updateUI();
+  }
+
+  function nextSlide(){ goToSlide(current + 1); }
+  function prevSlide(){ goToSlide(current - 1); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') nextSlide();
+    if (e.key === 'ArrowLeft') prevSlide();
+  });
+
+  function toggleCheatSheet(){
+    const el = document.getElementById('cheatSheet');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function toggleReveal(id){
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' || !el.style.display ? 'block' : 'none';
+  }
+
+  // Quiz logic
+  function activateQuiz(quizId){
+    const quiz = document.getElementById(quizId);
+    quiz.querySelectorAll('.question').forEach(q => {
+      const options = q.querySelectorAll('.option');
+      options.forEach((opt, idx) => {
+        opt.addEventListener('click', () => {
+          options.forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          q.dataset.selected = idx;
+        });
+      });
+    });
+  }
+
+  function gradeQuiz(quizId, outputId){
+    const quiz = document.getElementById(quizId);
+    let score = 0;
+    let total = 0;
+    quiz.querySelectorAll('.question').forEach(q => {
+      total++;
+      const correct = Number(q.dataset.answer);
+      const selected = q.dataset.selected !== undefined ? Number(q.dataset.selected) : -1;
+      const options = q.querySelectorAll('.option');
+      options.forEach((opt, idx) => {
+        opt.classList.remove('correct', 'incorrect');
+        if(idx === correct) opt.classList.add('correct');
+        if(selected === idx && idx !== correct) opt.classList.add('incorrect');
+      });
+      if(selected === correct) score++;
+    });
+
+    const out = document.getElementById(outputId);
+    let msg = "";
+    if(score === total) msg = "¡Excelente! Dominas muy bien las conversiones.";
+    else if(score >= 3) msg = "¡Muy bien! Solo necesitas reforzar algunos detalles.";
+    else msg = "Sigue practicando: revisa las equivalencias y vuelve a intentarlo.";
+    out.innerHTML = `<div class="score-box">Puntaje: <strong>${score}/${total}</strong><br>${msg}</div>`;
+  }
+
+  function resetQuiz(quizId, outputId){
+    const quiz = document.getElementById(quizId);
+    quiz.querySelectorAll('.question').forEach(q => {
+      delete q.dataset.selected;
+      q.querySelectorAll('.option').forEach(opt => {
+        opt.classList.remove('selected', 'correct', 'incorrect');
+      });
+    });
+    document.getElementById(outputId).innerHTML = "";
+  }
+
+  buildToc();
+  updateUI();
+  activateQuiz('quiz1');
+</script>
+
+</body>
+</html>
